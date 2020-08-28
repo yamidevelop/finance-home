@@ -1,0 +1,78 @@
+const jwt = require('jsonwebtoken');
+const Usuario = require('../models/usuario');
+
+//==============================================
+// Verificar Token
+//==============================================
+let verificaToken = (req, res, next) => {
+    let token = req.get('token'); //si es Autherization como parametro en el HEADER seria 'Autherization'
+
+
+    //en el decoded está la info del usuario. (param header, nombre firma, callback)
+    jwt.verify(token, process.env.SEED, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ //401 error de autorizacion
+                ok: false,
+                err
+            });
+        }
+
+        req.usuario = decoded.usuario;
+
+        next(); //ejecutar el 3er parametro porque sino donde se llame la funcion se va a detener
+    });
+
+
+
+};
+
+
+//==============================================
+//Verifica AdminRole
+//==============================================
+let VerificaAdmin_Role = (req, res, next) => {
+
+    let usuario = req.usuario;
+    let UsuarioDB = Usuario.find({ id: usuario.id })
+
+    if (usuario.role === 'ADMIN_ROLE') {
+        next();
+    } else {
+
+        return res.json({
+            ok: false,
+            err: {
+                message: 'El usuario no es administrador'
+            }
+        })
+    }
+}
+
+//==============================================
+//Verifica Token para imagen
+//==============================================
+let VerificaTokenImg = (req, res, next) => {
+
+    let token = req.query.token; //se debe poner en la ruta despues del .jpg?token=iojijirwlwf
+
+    jwt.verify(token, process.env.SEED, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ //401 error de autorizacion
+                ok: false,
+                err: {
+                    message: 'Token no válido'
+                }
+            });
+        }
+
+        req.usuario = decoded.usuario;
+        next(); //ejecutar el 3er parametro porque sino donde se llame la funcion se va a detener
+    });
+
+}
+
+module.exports = {
+    verificaToken,
+    VerificaAdmin_Role,
+    VerificaTokenImg
+}

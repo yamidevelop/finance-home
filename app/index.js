@@ -1,0 +1,1 @@
+alert('Vuejs goes hre');
